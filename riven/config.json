@@ -1,9 +1,8 @@
 {
-  "weapon": "Quassus",
+  "weapon": "quassus",
   "stats": [
     "critical_chance",
     "critical_damage"
   ],
   "negative": "damage_to_corpus"
 }
-
