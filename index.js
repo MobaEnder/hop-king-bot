@@ -1,71 +1,80 @@
-const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
+const { 
+    Client, 
+    GatewayIntentBits, 
+    REST, 
+    Routes 
+} = require('discord.js');
+
 const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
-// 🔥 Riven checker
-const startRivenChecker = require('./riven/checker');
-
-const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
-});
-
+// ====== CONFIG ======
 const TOKEN = process.env.BOT_TOKEN;
 const APP_ID = process.env.APP_ID;
 
-// ================= LOAD SLASH COMMANDS =================
+// ====== CLIENT ======
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds],
+});
+
+// ====== LOAD COMMANDS ======
 client.commands = new Map();
 const commands = [];
 
-const commandPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandPath).filter(file => file.endsWith('.js'));
+const commandFiles = fs
+    .readdirSync('./commands')
+    .filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-    const command = require(path.join(commandPath, file));
+    const command = require(`./commands/${file}`);
+
+    if (!command.data || !command.execute) {
+        console.warn(`⚠️ Lệnh ${file} thiếu data hoặc execute`);
+        continue;
+    }
+
     client.commands.set(command.data.name, command);
     commands.push(command.data.toJSON());
 }
 
-// ================= REGISTER SLASH COMMANDS =================
+// ====== REGISTER SLASH COMMANDS ======
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
     try {
+        console.log('🔄 Đang đăng ký slash commands...');
         await rest.put(
             Routes.applicationCommands(APP_ID),
             { body: commands }
         );
-        console.log('✅ Đã đăng ký slash commands!');
-    } catch (err) {
-        console.error('❌ Lỗi đăng ký slash command:', err);
+        console.log('✅ Đăng ký slash commands thành công!');
+    } catch (error) {
+        console.error('❌ Lỗi đăng ký slash commands:', error);
     }
 })();
 
-// ================= BOT READY =================
-client.once('ready', () => {
-    console.log(`🤖 Bot online: ${client.user.tag}`);
-
-    // 🔥 Bắt đầu check Riven nền (5s/lần)
-    startRivenChecker(client);
-});
-
-// ================= HANDLE SLASH COMMAND =================
+// ====== HANDLE INTERACTION ======
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
-    const cmd = client.commands.get(interaction.commandName);
-    if (!cmd) return;
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
 
     try {
-        await cmd.execute(interaction);
-    } catch (err) {
-        console.error(err);
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
         await interaction.reply({
             content: '❌ Có lỗi xảy ra khi thực thi lệnh!',
-            ephemeral: true
+            ephemeral: true,
         });
     }
 });
 
-// ================= LOGIN =================
+// ====== READY ======
+client.once('ready', () => {
+    console.log(`🤖 Bot online: ${client.user.tag}`);
+});
+
+// ====== LOGIN ======
 client.login(TOKEN);
