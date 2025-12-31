@@ -7,28 +7,23 @@ module.exports = {
 
     async execute(interaction) {
 
-        // ====== SETTING TOP (chỉ cần sửa ID + level) ======
+        // ====== SETTING TOP + PHẦN THƯỞNG ======
         const topList = [
-            { id: '1451400932733616289', Rank: 1, reward: '---' },
-            { id: '552876985676726275', Rank: 2, reward: '---' },
-            { id: '742738400330907741', Rank: 3, reward: '---' },
-            { id: '784321064515141632', Rank: 4, reward: '---' },
-            { id: '929228634563182622', Rank: 5, reward: '---' },
-            { id: '715579253051359342', Rankl: 6, reward: '---' },
-            { id: '692226401398423592', Rank: 7, reward: '---' }
+            { id: '1451400932733616289', reward: '🎁 1 Skin Tự Chọn' },
+            { id: '552876985676726275', reward: '🎁 x5 Oni Forma Bundel' },
+            { id: '742738400330907741', reward: '🎁 x10 Forma Bundel' },
+            { id: '784321064515141632', reward: '🎁 x5 Forma Bundel' },
+            { id: '929228634563182622', reward: '🎁 x5 Forma Bundel' },
+            { id: '715579253051359342', reward: '🎁 x5 Forma Bundel' },
+            { id: '692226401398423592', reward: '🎁 x5 Forma Bundel' }
         ];
 
-        // ====== BUILD DESCRIPTION ======
         let description = '';
 
         for (let i = 0; i < topList.length; i++) {
-            const userId = topList[i].id;
-            const level = topList[i].level;
-            const reward = topList[i].reward;
+            const { id, reward } = topList[i];
 
-            description += `**#${i + 1}** • <@${userId}> • **LVL:** ${level}\n`;
-            // sau này bạn có thể thêm:
-            // description += `🎁 Reward: ${reward}\n`;
+            description += `**#${i + 1}** • <@${id}> • ${reward}\n`;
         }
 
         const embed = new EmbedBuilder()
