@@ -3,7 +3,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('toparbilegend')
-        .setDescription('Top Arbitrations Legend'),
+        .setDescription('Top DPS Arbitrations Legend'),
 
     async execute(interaction) {
 
