@@ -16,7 +16,7 @@ module.exports = {
     try {
       const query = interaction.options.getString('text');
 
-      // 1️⃣ Search web bằng Tavily
+      // 🔎 Search web bằng Tavily
       const searchRes = await fetch('https://api.tavily.com/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,14 +29,13 @@ module.exports = {
       });
 
       const searchData = await searchRes.json();
-
-      const sourcesText = searchData.results
+      const sourcesText = (searchData.results || [])
         .map(r => `${r.title}\n${r.content}`)
         .join('\n\n');
 
-      // 2️⃣ Dùng Gemini tổng hợp
+      // 🤖 Gemini tổng hợp
       const aiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -45,7 +44,7 @@ module.exports = {
               {
                 parts: [
                   {
-                    text: `Dựa trên thông tin sau, hãy trả lời câu hỏi bằng tiếng Việt, rõ ràng và dễ hiểu.\n\nThông tin:\n${sourcesText}\n\nCâu hỏi: ${query}`
+                    text: `Dựa trên thông tin sau, hãy trả lời bằng tiếng Việt, rõ ràng và ngắn gọn.\n\nThông tin:\n${sourcesText}\n\nCâu hỏi: ${query}`
                   }
                 ]
               }
@@ -55,12 +54,11 @@ module.exports = {
       );
 
       const aiData = await aiRes.json();
-
-      const answer = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      const answer = aiData?.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (!answer) {
         console.error(aiData);
-        return interaction.editReply('❌ Không thể lấy câu trả lời.');
+        return interaction.editReply('❌ Gemini không trả về nội dung.');
       }
 
       await interaction.editReply(answer);
