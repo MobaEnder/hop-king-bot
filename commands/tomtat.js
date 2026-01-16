@@ -14,20 +14,20 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 }); // ephemeral
 
     try {
       const channelId = interaction.options.getString('channel_id');
       const channel = await interaction.client.channels.fetch(channelId);
 
       if (!channel || !channel.isTextBased()) {
-        return interaction.editReply('❌ Channel ID không hợp lệ hoặc không phải text channel.');
+        return interaction.editReply('❌ Channel ID không hợp lệ.');
       }
 
       const messages = await channel.messages.fetch({ limit: 100 });
 
       if (!messages.size) {
-        return interaction.editReply('❌ Channel này chưa có tin nhắn.');
+        return interaction.editReply('❌ Channel này không có tin nhắn.');
       }
 
       const text = messages
@@ -35,7 +35,7 @@ module.exports = {
         .map(m => `${m.author.username}: ${m.content}`)
         .join('\n');
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro' });
       const result = await model.generateContent(
         `Hãy tóm tắt ngắn gọn đoạn hội thoại Discord sau bằng tiếng Việt:\n\n${text}`
       );
