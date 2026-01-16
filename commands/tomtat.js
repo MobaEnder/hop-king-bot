@@ -1,7 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,7 +11,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ flags: 64 }); // ephemeral
+    await interaction.deferReply({ flags: 64 });
 
     try {
       const channelId = interaction.options.getString('channel_id');
@@ -25,9 +22,8 @@ module.exports = {
       }
 
       const messages = await channel.messages.fetch({ limit: 100 });
-
       if (!messages.size) {
-        return interaction.editReply('❌ Channel này không có tin nhắn.');
+        return interaction.editReply('❌ Channel không có tin nhắn.');
       }
 
       const text = messages
@@ -35,12 +31,29 @@ module.exports = {
         .map(m => `${m.author.username}: ${m.content}`)
         .join('\n');
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro' });
-      const result = await model.generateContent(
-        `Hãy tóm tắt ngắn gọn đoạn hội thoại Discord sau bằng tiếng Việt:\n\n${text}`
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: `Hãy tóm tắt ngắn gọn đoạn chat Discord sau bằng tiếng Việt:\n\n${text}` }]
+              }
+            ]
+          })
+        }
       );
 
-      await interaction.editReply(result.response.text());
+      const data = await res.json();
+
+      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        console.error(data);
+        return interaction.editReply('❌ Gemini không trả về nội dung.');
+      }
+
+      await interaction.editReply(data.candidates[0].content.parts[0].text);
 
     } catch (err) {
       console.error(err);
